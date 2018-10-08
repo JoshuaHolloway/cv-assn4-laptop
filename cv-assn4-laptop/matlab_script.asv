@@ -46,8 +46,6 @@ desc_3__to_cpp = desc_3;
 
 
 
-
-
 % SHOULD JUST BE THE PROVIDED CORNERS!!!
 % num_valid_points_2__to_cpp = size(img(2).desc,1);
 % num_valid_points_3__to_cpp = size(img(3).desc,1);

@@ -9,8 +9,6 @@ using std::vector;
 using namespace cv;
 int main()
 {
-	// NOTE - the feature matching section assumes there are less features in image-2 than image-3
-
 	// Link to MATLAB environment
 	matlabClass matlab;
 
@@ -25,10 +23,25 @@ int main()
 	// ==== Image 2 and 3 =============================================
 
 	// Pass data back into C++ from Matlab:
-	matlab.command("matlab_script");
+	//matlab.command("matlab_script");
+	matlab.command("load('sift_features.mat');");
+	matlab.command("load('corners.mat');");
 
+	// Step 1: Read the features and descriptors from MATLAB:
 
+	// Read in features/descriptors:
+	Mat sift_desc_2 = matlab.return_matrix_as_cvMat_from_matlab("sift_center"); 	// Each row-vector is one feature
+	Mat sift_desc_3 = matlab.return_matrix_as_cvMat_from_matlab("sift_right");
 
+	// Raw 2d-coordinates of features
+	Mat feature_coords_2 = matlab.return_matrix_as_cvMat_from_matlab("corners_center");
+	Mat feature_coords_3 = matlab.return_matrix_as_cvMat_from_matlab("corners_right");
+
+	assert(sift_desc_2.rows == sift_desc_3.rows);
+	assert(sift_desc_2.cols == sift_desc_3.cols);
+	size_t num_features = sift_desc_2.rows;
+	size_t desc_dim = sift_desc_2.cols;
+	
 	imshow("test", imgs[0]);
 	waitKey(0);
 

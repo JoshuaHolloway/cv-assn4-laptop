@@ -20,8 +20,6 @@ private:
 public:
 	matlabClass() // Default constructor
 	{
-
-
 		// Start the MATLAB engine
 		ep = engOpen(NULL);
 		if (!(ep = engOpen("\0")))
@@ -48,8 +46,8 @@ public:
 		string current_path = "cd " + ExePath();
 		command(current_path); // Move to current directory of generated .exe	
 		//command("cd ../../../cv-assn4-brickyard/cv-assn4-brickyard");  // Move to location of .m files
-		command("cd C:/Users/jhollow6.ASUAD/Desktop/10_08_2018/cv_assn4_brickyard/cv-assn4-brickyard");
-	
+		//command("cd C:/Users/jhollow6.ASUAD/Desktop/10_08_2018/cv_assn4_brickyard/cv-assn4-brickyard");
+		command("cd C:/Users/josh/Desktop/oct_08_2018/cv_assn4_laptop/cv-assn4-laptop/cv-assn4-laptop");
 	}
 	~matlabClass() // Destructor
 	{
@@ -165,7 +163,7 @@ public:
 		std::cout << "Vector passed from MATLAB into C++ = " << cppValDblPtr[0] << " " << cppValDblPtr[1] << std::endl << std::endl;
 	}
 
-	cv::Mat return_matrix_as_cvMat_from_matlab(string variable, int rows, int cols)
+	cv::Mat return_matrix_as_cvMat_from_matlab(string variable)
 	{
 		// Toy example:
 		// -2x3 matrix in matlab:
@@ -192,8 +190,26 @@ public:
 		//          a[i*N + j] = a[j*M + i]
 
 
-		mxArray* cppValmxArray = engGetVariable(ep, variable.c_str());					// Pointer to MATLAB variable 
+		mxArray* cppValmxArray = engGetVariable(ep, variable.c_str());					// Pointer to MATLAB variable
+
+		string str_get_rows = "rows = size(" + variable + ", 1);";
+		string str_get_cols = "cols = size(" + variable + ", 2);";
+
+		command(str_get_rows);
+		command(str_get_cols);
+
+		//mxArray* mxArr_rows = engGetVariable(ep, "rows");					// Pointer to MATLAB variable
+		//mxArray* mxArr_cols = engGetVariable(ep, "cols");					// Pointer to MATLAB variable
+
 		double* cppValDblPtr = static_cast<double*>(mxGetData(cppValmxArray));	// Pointer to C variable
+		double* dbl_rows = static_cast<double*>(mxGetData(engGetVariable(ep, "rows")));
+		double* dbl_cols = static_cast<double*>(mxGetData(engGetVariable(ep, "cols")));
+
+		int rows = (int)dbl_rows[0];
+		int cols = (int)dbl_cols[0];
+
+		cout << "\mrows = " << dbl_rows[0] << "\n";
+		cout << "\mcols = " << dbl_cols[0] << "\n";
 
 		// Get dimensions from MATLAB
 		//auto rows = return_scalar_from_matlab("rows");
@@ -201,12 +217,13 @@ public:
 
 		//cppValDblPtr = transposeLin(cppValDblPtr, (int)rows, (int)cols);
 
-		std::cout << "Vector passed from MATLAB into C++:\n";
+		std::cout << "\nMatrix passed from MATLAB into C++:\n";
 		cv::Mat out(rows, cols, CV_64FC1);
 		for (int i = 0; i < rows; i++)
 			for (int j = 0; j < cols; j++)
 				out.at<double>(i, j) = cppValDblPtr[j*rows + i];
 
+		std::cout << "\nDimensions = " << out.rows << " x " << out.cols << "\n";
 		return out;
 	}
 
