@@ -16,7 +16,7 @@
 #include <opencv2/core/utility.hpp>
 #include <opencv2/core/ocl.hpp>
 using std::vector;
-using namespace cv;
+//using namespace cv;
 //===================================================================
 //Mat est_homog(const Mat& X, const Mat& x)
 Mat est_homog(vector<Point2f> X, vector<Point2f> x)
