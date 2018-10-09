@@ -93,6 +93,7 @@ int main()
 
 	// Perform matching with Lowe-Ratio-Test Thresholding
 	Mat index_pairs;
+	vector<DMatch> index_pairs_matches;
 	vector<KeyPoint> X, x;
 	size_t num_matches{0};
 	for (int i = 0; i != num_features; ++i) // iterate down the rows
@@ -123,6 +124,9 @@ int main()
 			auto index_2 = min_idx_1_; // Col-index of l2-mat corresponds to index of feature from image-2 corresponds to current (ith) row
 			Point2i match_indices(index_1, index_2);
 			index_pairs.push_back(match_indices);
+
+			// min_1 is the L2-norm for this match
+			index_pairs_matches.push_back(DMatch(index_1, index_2, min_1));
 			
 			// Set column to large value to ensure unique matches
 			l2_mat.col(min_idx_1_).setTo(Scalar(1e6));
@@ -147,7 +151,6 @@ int main()
 	for (int i = 0; i < num_matches; ++i)
 	{
 		// The matches have already been made => Just need to index into them like (0)<->(0), (1)<->(1), etc.
-		cout << "i = " << i << "\n";
 		int queryIdx = i;	
 		int trainIdx = i;
 		float distance = 1.0f;
@@ -156,11 +159,18 @@ int main()
 			matchColor = Scalar::all(-1),
 			singlePointColor = Scalar::all(-1));
 		imshow("matched features", outImg);
+
+		// The other way to do this is to use index_pairs_matches 
+		// and the original unordered set of points
+
 	}
-	waitKey(0);
+	//waitKey(0);
+
+	// -----------------------------------------------------------------
+	/// Randomly select four samples
+	// -----------------------------------------------------------------
 
 
-	// Randomly select four samples
 
 	// Instantiate object of templated normal_distribution class
 	std::random_device seed;
@@ -169,10 +179,35 @@ int main()
 	//const float variance = 5.0f;
 	//std::normal_distribution<float> distribution(mean, variance);
 	std::uniform_int_distribution<> distribution(0, num_matches);
-
-	auto debug = distribution(generator);
+	
+	vector<int>rand(num_matches);
 	cout << "num_matches = " << num_matches << "\n";
-	cout << "debug = " << debug << "\n";
+
+	// Use logic like below to ensure each value chosen is unique
+	for (int i = 0; i != 4; ++i)
+	{
+		// Sample value from uniform distribution:
+		rand[i] = distribution(generator);
+
+		// Ensure uique rand value  chosen:
+		for (int j = 0; j != i; ++j)
+		{
+			// Does newly chosen value match any of the pevious values j = 0:i
+			if (rand[j] == rand[i])
+			{
+				--i;
+				break;
+			}		
+		}
+	}
+
+	for (int i = 0; i != 4; ++i)
+		cout << "rand[i=" << i << "] = " << rand[i] << "\n";
+		
+
+	// -Use this random number to index into the row of the cv::Mat of index_pairs
+	// -Remove that row after using to have unique set
+
 
 
 
@@ -211,6 +246,6 @@ int main()
 	////cout << "\n\ninliers[0]:\n" << inliers[0];
 	////cout << "\n\ninliers[1]:\n" << inliers[1];
 
-
+	
 	return 0;
 }
