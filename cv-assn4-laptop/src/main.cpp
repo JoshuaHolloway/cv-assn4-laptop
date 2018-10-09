@@ -176,13 +176,13 @@ int main()
 		drawMatches(imgs[1], X, imgs[2], x, matches, outImg,
 			matchColor = Scalar::all(-1),
 			singlePointColor = Scalar::all(-1));
-		imshow("matched features", outImg);
 
 		// The other way to do this is to use index_pairs_matches 
 		// and the original unordered set of points
-
 	}
-	//waitKey(0);
+	imshow("matched features", outImg);
+	waitKey(0);
+
 
 	// -----------------------------------------------------------------
 	/// Randomly select four samples
@@ -270,21 +270,59 @@ int main()
 		vector<Mat> inliers = ransac(H, X_mat_, x_mat_, threshold);
 		cout << "\n\ninliers[0]:\n" << inliers[0];
 		cout << "\n\ninliers[1]:\n" << inliers[1];
+		cout << "\n\nnumber of inliers = " << inliers[1].rows << "\n";
+		
+		auto num_inliers = inliers[0].rows;
+
+		// Need to copy the inliers into a std::vector<KeyPoint> data-structure
+		// Need to copy the inliers into a std::vector<KeyPoint> data-structure
+		// Need to copy the inliers into a std::vector<KeyPoint> data-structure
+		// Need to copy the inliers into a std::vector<KeyPoint> data-structure
+		std::vector<cv::KeyPoint> X_inliers, x_inliers;
+		for (int i = 0; i != num_inliers; ++i)
+		{
+			// Is it rows that are the individual coordinates?
+			// Is it rows that are the individual coordinates?
+			// Is it rows that are the individual coordinates?
+			auto X1 = inliers[0].at<double>(i, 0);
+			auto X2 = inliers[0].at<double>(i, 1);
+
+			auto x1 = inliers[1].at<double>(i, 0);
+			auto x2 = inliers[1].at<double>(i, 1);
+
+			X_inliers.push_back(KeyPoint(X1, X2, 1.f));
+			x_inliers.push_back(KeyPoint(x1, x2, 1.f));
+		}
 
 
-		// HERE YOU NEED TO PLOT THE INLIERS
-		// HERE YOU NEED TO PLOT THE INLIERS
-		// HERE YOU NEED TO PLOT THE INLIERS
-		// HERE YOU NEED TO PLOT THE INLIERS
-		// HERE YOU NEED TO PLOT THE INLIERS
-		// HERE YOU NEED TO PLOT THE INLIERS
-		// HERE YOU NEED TO PLOT THE INLIERS
-		// HERE YOU NEED TO PLOT THE INLIERS
-		// HERE YOU NEED TO PLOT THE INLIERS
-		// HERE YOU NEED TO PLOT THE INLIERS
+		//// LET's ASSUME THAT THE HOMOGRAPHY MEETS THE INLIER OR REPROJECTION ERROR THRESHOLD
+		//// -Now, look at the inliers:
+		Mat outImg2;
+		Scalar matchColor2, singlePointColor2;
+		vector<DMatch> matches2;
+		for (int i = 0; i < num_inliers; ++i)
+		{
+			// The matches have already been made => Just need to index into them like (0)<->(0), (1)<->(1), etc.
+			int queryIdx = i;
+			int trainIdx = i;
+			float distance = 1.0f;
+			matches2.push_back(DMatch(i, i, distance));
+			drawMatches(imgs[1], X_inliers, imgs[2], x_inliers, matches2, outImg2,
+				matchColor = Scalar::all(-1),
+				singlePointColor = Scalar::all(-1));
+		}
+		imshow("matched features", outImg2);
+		waitKey(0);
 
-		// Compute re-projection error
+
+
+
+
 	}
+
+
+
+
 
 	// DUDE - you have to do the FFT filtering today!!!!!!!!!
 	// DUDE - you have to do the FFT filtering today!!!!!!!!!
