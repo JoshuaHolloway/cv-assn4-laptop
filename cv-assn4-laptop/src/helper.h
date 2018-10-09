@@ -1,4 +1,5 @@
 #pragma once
+#include <cassert>
 #include <vector>
 #include <iostream>
 #include <cstdlib>
@@ -70,7 +71,7 @@ cv::Mat est_homog(vector<Point2f> X, vector<Point2f> x)
 	cv::SVD::compute(A, Sigma, U, Vt, flag = 4);
 
 	//matlabClass matlab;
-	//matlab.passImageIntoMatlab(Vt, "Vt_cpp");
+	//matlab.cv_mat_to_matlab(Vt, "Vt_cpp");
 
 	// Modify SVD
 	Mat V = Vt.t(); // SVD in OpenCV is different than MATLAB and Numpy
@@ -90,11 +91,11 @@ cv::Mat est_homog(vector<Point2f> X, vector<Point2f> x)
 
 	//matlab.command("cd C:/Dropbox/fall2018_cv/ass4/cv-ass4-3/cv-ass4-matlab");
 	//matlab.command("[ H, A, U, S, V ] = est_homography([488,124; 523,26; 266,254; 711,322], [908,124; 946,29; 880,255; 1116,327])");
-	//matlab.passImageIntoMatlab(A, "A_cpp");
-	//matlab.passImageIntoMatlab(U, "U_cpp");
-	//matlab.passImageIntoMatlab(Sigma, "S_cpp");
-	//matlab.passImageIntoMatlab(V, "V_cpp");
-	//matlab.passImageIntoMatlab(H, "H_cpp");
+	//matlab.cv_mat_to_matlab(A, "A_cpp");
+	//matlab.cv_mat_to_matlab(U, "U_cpp");
+	//matlab.cv_mat_to_matlab(Sigma, "S_cpp");
+	//matlab.cv_mat_to_matlab(V, "V_cpp");
+	//matlab.cv_mat_to_matlab(H, "H_cpp");
 
 	return H;
 }
@@ -223,9 +224,45 @@ double reproj_error(Mat H, Mat Xt, Mat xt)
 	return l2;
 }
 //===================================================================
+//===================================================================
+Mat to_homo(Mat x)
+{
+	// Map a vector in non-homogeneous coordinates (dimension m)
+	//  to a vector in homogeneous coordinates     (dimension m+1)
+
+	Mat x_ = Mat::ones(x.rows + 1, x.cols, CV_64FC1);
+	for (int i = 0; i < x.rows; ++i)
+		for (int j = 0; j < x.cols; ++j)
+			x_.at<double>(i, j) = x.at<double>(i, j);
+
+	return x_;
+}
+//===================================================================
+Mat from_homo(Mat x_)
+{
+	// Map a vector in homogeneous coordinates     (dimension m+1)
+	//  to a vector in non-homogeneous coordinates (dimension m)
+
+	const size_t rows = x_.rows;
+	const size_t cols = x_.cols;
+
+	Mat x = Mat::ones(rows - 1, cols, CV_64FC1);
+	for (int i = 0; i < rows - 1; ++i)
+		for (int j = 0; j < cols; ++j)
+			x.at<double>(i, j) = x_.at<double>(i, j) / x_.at<double>(rows - 1, j);
+
+	return x;
+}
+//===================================================================
 vector<Mat> ransac(Mat H, Mat Xt, Mat xt, float threshold)
 {
-	assert(Xt.size() == xt.size());
+	// WHY IS THE INPUT LISTED AS BEING TRANSPOSED???
+	// WHY IS THE INPUT LISTED AS BEING TRANSPOSED???
+	// WHY IS THE INPUT LISTED AS BEING TRANSPOSED???
+	// WHY IS THE INPUT LISTED AS BEING TRANSPOSED???
+
+	assert(Xt.rows == xt.rows);
+	assert(Xt.cols == xt.cols);
 
 	// Comes in as Nx2 cv::Mat's, fix this to 2xN cv::Mat's
 	Mat X = Xt.t();
@@ -244,10 +281,15 @@ vector<Mat> ransac(Mat H, Mat Xt, Mat xt, float threshold)
 
 	// Number of point correspondances
 	const auto N = x.cols;
+	const auto D = x.rows; // In homo or non-homo representation?
 
 	// Map points into homogeneous coordinates
+	Mat X_;
+	if (D == 2) // not yet in homo-coordinates
+		X_ = to_homo(X);
+	else if (D == 3)
+		X_ = X;
 
-	Mat X_ = to_homo(X);
 
 	cout << "\nX size = " << X.rows << " x " << X.cols << "\n";
 	cout << "\nX_ size = " << X_.rows << " x " << X_.cols << "\n";
@@ -318,7 +360,7 @@ vector<Mat> ransac(Mat H, Mat Xt, Mat xt, float threshold)
 
 				//cout << "\n\nX_inliers = " << X_inliers << "\n";
 				//getchar();
-			}				
+			}
 		}
 		l2 = sqrt(l2) / static_cast<double>(N);
 		cout << "l2 error manual = " << l2 << "\n";
@@ -330,7 +372,7 @@ vector<Mat> ransac(Mat H, Mat Xt, Mat xt, float threshold)
 			inlier_output.push_back(X_inliers);
 			inlier_output.push_back(x_inliers);
 		}
-		else 
+		else
 		{
 			// reset number of inliers to count and start again
 			num_inliers = 0;
@@ -338,34 +380,5 @@ vector<Mat> ransac(Mat H, Mat Xt, Mat xt, float threshold)
 	}
 	// Output: inlier_output[0] = X  and inlier_output[1] = x
 	return inlier_output;
-}
-//===================================================================
-Mat to_homo(Mat x)
-{
-	// Map a vector in non-homogeneous coordinates (dimension m)
-	//  to a vector in homogeneous coordinates     (dimension m+1)
-
-	Mat x_ = Mat::ones(x.rows + 1, x.cols, CV_64FC1);
-	for (int i = 0; i < x.rows; ++i)
-		for (int j = 0; j < x.cols; ++j)
-			x_.at<double>(i, j) = x.at<double>(i, j);
-
-	return x_;
-}
-//===================================================================
-Mat from_homo(Mat x_)
-{
-	// Map a vector in homogeneous coordinates     (dimension m+1)
-	//  to a vector in non-homogeneous coordinates (dimension m)
-
-	const size_t rows = x_.rows;
-	const size_t cols = x_.cols;
-
-	Mat x = Mat::ones(rows - 1, cols, CV_64FC1);
-	for (int i = 0; i < rows - 1; ++i)
-		for (int j = 0; j < cols; ++j)
-			x.at<double>(i, j) = x_.at<double>(i, j) / x_.at<double>(rows - 1, j);
-
-	return x;
 }
 //===================================================================

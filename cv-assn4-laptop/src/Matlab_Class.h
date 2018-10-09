@@ -93,7 +93,7 @@ public:
 	}
 
 	// 2D cv::Mat passed from C++ into MATLAB
-	void passImageIntoMatlab(const cv::Mat& img, string name)
+	void cv_mat_to_matlab(const cv::Mat& img, string name)
 	{
 		// Convert the Mat object into a double array
 		//double* linImgArrDouble = (double*)malloc(sizeof(double) * img.rows * img.cols);
@@ -147,7 +147,7 @@ public:
 		engEvalString(ep, "sound(y,Fs);");
 	}
 
-	double return_scalar_from_matlab(string variable)
+	double return_scalar(string variable)
 	{
 		// Grab value from workspace
 		mxArray *cppValmxArray = engGetVariable(ep, variable.c_str());					// Pointer to MATLAB variable 
@@ -156,14 +156,14 @@ public:
 		return *cppValDblPtr;
 	}
 
-	void returnVectorFromMatlab(string variable)
+	void return_vector(string variable)
 	{
 		mxArray *cppValmxArray = engGetVariable(ep, variable.c_str());								// Pointer to MATLAB variable 
 		const double* cppValDblPtr = static_cast<double*>(mxGetData(cppValmxArray));	// Pointer to C variable
 		std::cout << "Vector passed from MATLAB into C++ = " << cppValDblPtr[0] << " " << cppValDblPtr[1] << std::endl << std::endl;
 	}
 
-	cv::Mat return_matrix_as_cvMat_from_matlab(string variable)
+	cv::Mat return_matrix(string variable)
 	{
 		// Toy example:
 		// -2x3 matrix in matlab:
@@ -212,8 +212,8 @@ public:
 		cout << "\mcols = " << dbl_cols[0] << "\n";
 
 		// Get dimensions from MATLAB
-		//auto rows = return_scalar_from_matlab("rows");
-		//auto cols = return_scalar_from_matlab("cols");
+		//auto rows = return_scalar("rows");
+		//auto cols = return_scalar("cols");
 
 		//cppValDblPtr = transposeLin(cppValDblPtr, (int)rows, (int)cols);
 
@@ -237,7 +237,7 @@ public:
 	//	command("josh()");
 
 	//	// Compute frobenius norm between MATLAB and C++
-	//	return_scalar_from_matlab("error");
+	//	return_scalar("error");
 	//}
 
 
@@ -271,7 +271,7 @@ public:
 	//	command("josh()");
 
 	//	// Compute frobenius norm between MATLAB and C++
-	//	return_scalar_from_matlab("error");
+	//	return_scalar("error");
 	//}
 	//=============================================================================
 	void opencv_type(const cv::Mat& mat)

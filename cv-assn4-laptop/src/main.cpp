@@ -1,3 +1,4 @@
+#include "helper.h"
 #include "Matlab_Class.h"
 //#include "part_4.h"
 #include <vector>
@@ -55,12 +56,12 @@ int main()
 	// Step 1: Read the features and descriptors from MATLAB:
 
 	// Read in features/descriptors:
-	Mat sift_desc_2 = matlab.return_matrix_as_cvMat_from_matlab("sift_center"); 	// Each row-vector is one feature
-	Mat sift_desc_3 = matlab.return_matrix_as_cvMat_from_matlab("sift_right");
+	Mat sift_desc_2 = matlab.return_matrix("sift_center"); 	// Each row-vector is one feature
+	Mat sift_desc_3 = matlab.return_matrix("sift_right");
 
 	// Raw 2d-coordinates of features
-	Mat feature_coords_2 = matlab.return_matrix_as_cvMat_from_matlab("corners_center");
-	Mat feature_coords_3 = matlab.return_matrix_as_cvMat_from_matlab("corners_right");
+	Mat feature_coords_2 = matlab.return_matrix("corners_center");
+	Mat feature_coords_3 = matlab.return_matrix("corners_right");
 
 	assert(sift_desc_2.rows == sift_desc_3.rows);
 	assert(sift_desc_2.cols == sift_desc_3.cols);
@@ -95,7 +96,7 @@ int main()
 	Mat index_pairs;
 	vector<DMatch> index_pairs_matches;
 	vector<KeyPoint> X, x;
-	size_t num_matches{0};
+	size_t num_matches{ 0 };
 	for (int i = 0; i != num_features; ++i) // iterate down the rows
 	{
 		// Extract row of the l2-matrix
@@ -118,7 +119,7 @@ int main()
 		double lowe_thresh = 0.6;
 		if (lowe_ratio < lowe_thresh)
 		{ // If ratio-test is met then we have a match
-			
+
 			// Store match
 			auto index_1 = i;
 			auto index_2 = min_idx_1_; // Col-index of l2-mat corresponds to index of feature from image-2 corresponds to current (ith) row
@@ -127,19 +128,39 @@ int main()
 
 			// min_1 is the L2-norm for this match
 			index_pairs_matches.push_back(DMatch(index_1, index_2, min_1));
-			
+
 			// Set column to large value to ensure unique matches
 			l2_mat.col(min_idx_1_).setTo(Scalar(1e6));
 
-			auto X1 = feature_coords_2.at<double>(index_1, 0),	X2 = feature_coords_2.at<double>(index_1, 1);
-			auto x1 = feature_coords_3.at<double>(index_2, 0),	x2 = feature_coords_3.at<double>(index_2, 1);
+			auto X1 = feature_coords_2.at<double>(index_1, 0), X2 = feature_coords_2.at<double>(index_1, 1);
+			auto x1 = feature_coords_3.at<double>(index_2, 0), x2 = feature_coords_3.at<double>(index_2, 1);
 
 			X.push_back(KeyPoint(X1, X2, 1.f));
 			x.push_back(KeyPoint(x1, x2, 1.f));
 
-			num_matches++;
+			++num_matches;
 		}
 	}
+
+	// Map the vector<KeyPoints> to a cv::Mat to be projected through the homography later
+	// Set them in homogeneous coordinates from the git-go
+	Mat X_mat_(num_matches, 3, CV_64FC1);
+	Mat x_mat_(num_matches, 3, CV_64FC1);
+	for (int i = 0; i != num_matches; ++i)
+	{ 
+		//cout << "i = " << i << " and num_features = " << num_features << "\n";
+
+		// ENSURE THESE SHOULD BE (X,Y,Z)
+
+		// y-coordinate													// x-coordinate
+		X_mat_.at<double>(i, 0) = X[i].pt.x;		X_mat_.at<double>(i, 1) = X[i].pt.y;	X_mat_.at<double>(i, 2) = 1.0;
+		x_mat_.at<double>(i, 0) = x[i].pt.x;		x_mat_.at<double>(i, 1) = x[i].pt.y;	x_mat_.at<double>(i, 2) = 1.0;
+
+		//getchar();
+	}
+
+	cout << "X__mat size = " << X_mat_.rows << " x " << X_mat_.cols << "\n";
+	cout << "x__mat size = " << x_mat_.rows << " x " << x_mat_.cols << "\n";
 
 	// Draw the matches
 	Mat outImg;
@@ -194,7 +215,7 @@ int main()
 			{
 				--i;
 				break;
-			}		
+			}
 		}
 	}
 
@@ -233,49 +254,50 @@ int main()
 		}
 
 		// Compute the homography estimation
-
+		matlab.cv_mat_to_matlab(X_mat, "X"); // C++ -> MATLAB
+		matlab.cv_mat_to_matlab(x_mat, "x"); // C++ -> MATLAB
+		matlab.command("[H] = est_homog_(X, x)");
+		Mat H = matlab.return_matrix("H"); // MATLAB -> C++
+		cout << "\nH:\n" << H;
 
 		// Project the points through the homography estimate
+		// -GRAB ALL THE POINTS FROM THE MATCHES
+		// --Recall that the matches are ordered in X and x which are both of type:	vector<KeyPoint>
+		double threshold = 1.0; // TODO: ENSURE THIS THESHOLD  IS SET TO DIMENSIONS OF PIXELS
+		vector<Mat> ransac_ = ransac(H, X_mat_, x_mat_, threshold);
+
+		// Drop RANSAC on these points:
+		vector<Mat> inliers = ransac(H, X_mat_, x_mat_, threshold);
+		cout << "\n\ninliers[0]:\n" << inliers[0];
+		cout << "\n\ninliers[1]:\n" << inliers[1];
 
 
+		// HERE YOU NEED TO PLOT THE INLIERS
+		// HERE YOU NEED TO PLOT THE INLIERS
+		// HERE YOU NEED TO PLOT THE INLIERS
+		// HERE YOU NEED TO PLOT THE INLIERS
+		// HERE YOU NEED TO PLOT THE INLIERS
+		// HERE YOU NEED TO PLOT THE INLIERS
+		// HERE YOU NEED TO PLOT THE INLIERS
+		// HERE YOU NEED TO PLOT THE INLIERS
+		// HERE YOU NEED TO PLOT THE INLIERS
+		// HERE YOU NEED TO PLOT THE INLIERS
+
+		// Compute re-projection error
 	}
 
-
-
 	// DUDE - you have to do the FFT filtering today!!!!!!!!!
 	// DUDE - you have to do the FFT filtering today!!!!!!!!!
 	// DUDE - you have to do the FFT filtering today!!!!!!!!!
 	// DUDE - you have to do the FFT filtering today!!!!!!!!!
 
+	// DUDE-2 - you have to move in the CUDA-conv code for the gradient section of the tilt-shift
+	// DUDE-2 - you have to move in the CUDA-conv code for the gradient section of the tilt-shift
+	// DUDE-2 - you have to move in the CUDA-conv code for the gradient section of the tilt-shift
+	// DUDE-2 - you have to move in the CUDA-conv code for the gradient section of the tilt-shift
+	// DUDE-2 - you have to move in the CUDA-conv code for the gradient section of the tilt-shift
+	// DUDE-2 - you have to move in the CUDA-conv code for the gradient section of the tilt-shift
 
-	// BELOW IS THE PORT OF THE HOMOGRAPHY CODE
-	// BELOW IS THE PORT OF THE HOMOGRAPHY CODE
-	// BELOW IS THE PORT OF THE HOMOGRAPHY CODE
-	// BELOW IS THE PORT OF THE HOMOGRAPHY CODE
-	//	-Make the mods to move it in here
-	
 
-	// Send the matches to MATLAB and run the script to compute the homography
-	
-	////// Grab Homography matrix
-	////Mat H2 = matlab.return_matrix_as_cvMat_from_matlab("H_to_cpp");
-
-	////// Correpsondences for images 2 <-> 3
-	////auto vects_2 = mat_2_points(X, x);
-
-	/////// Compute re-projection error
-	////// Step 1: Grab the full set of point correspondances
-	////auto N = matlab.return_scalar_from_matlab("num_matches__to_cpp");
-	////Mat X2_full = matlab.return_matrix_as_cvMat_from_matlab("X2_full__to_cpp", (int)N, 2);
-	////Mat x2_full = matlab.return_matrix_as_cvMat_from_matlab("x2_full__to_cpp", (int)N, 2);
-
-	////// Step 2: Pass into re-projection function
-	////float threshold = 4.0f;
-	////auto l2_error = reproj_error(H2, X2_full, x2_full);
-	////vector<Mat> inliers = ransac(H2, X2_full, x2_full, threshold);
-	////cout << "\n\ninliers[0]:\n" << inliers[0];
-	////cout << "\n\ninliers[1]:\n" << inliers[1];
-
-	
 	return 0;
 }
