@@ -131,11 +131,8 @@ int main()
 			// Set column to large value to ensure unique matches
 			l2_mat.col(min_idx_1_).setTo(Scalar(1e6));
 
-			auto X1 = feature_coords_2.at<double>(index_1, 0);
-			auto X2 = feature_coords_2.at<double>(index_1, 1);
-
-			auto x1 = feature_coords_3.at<double>(index_2, 0);
-			auto x2 = feature_coords_3.at<double>(index_2, 1);
+			auto X1 = feature_coords_2.at<double>(index_1, 0),	X2 = feature_coords_2.at<double>(index_1, 1);
+			auto x1 = feature_coords_3.at<double>(index_2, 0),	x2 = feature_coords_3.at<double>(index_2, 1);
 
 			X.push_back(KeyPoint(X1, X2, 1.f));
 			x.push_back(KeyPoint(x1, x2, 1.f));
@@ -203,13 +200,45 @@ int main()
 
 	for (int i = 0; i != 4; ++i)
 		cout << "rand[i=" << i << "] = " << rand[i] << "\n";
-		
 
-	// -Use this random number to index into the row of the cv::Mat of index_pairs
-	// -Remove that row after using to have unique set
+	// -Use this random number to index into the row of the cv::Mat of index_pairs which you use to index into feature_coords
+	// -Use this to compute the
+
+	float thresh = 0.5f;
+	float reproj_error = 1.0f;
+
+	while (reproj_error > thresh)
+	{
+		// Grab the four coordinates:
+		Mat X_mat; //(4, 2, CV_64FC1);
+		Mat x_mat; //(4, 2, CV_64FC1);
+		for (int i = 0; i != 4; ++i)
+		{
+			auto feature_coord_2 = feature_coords_2.row(index_pairs.at<int>(rand[i], 0));
+			auto feature_coord_3 = feature_coords_3.row(index_pairs.at<int>(rand[i], 1));
+
+			//cout << "\nrandom index into index_pair = " << rand[i];
+
+			//cout << "\nindex_pairs at the randon index for image 2 is: " << index_pairs.at<int>(rand[i], 0);
+			//cout << "\nindex_pairs at the randon index for image 3 is: " << index_pairs.at<int>(rand[i], 1);
+
+			cout << "\nfeature_coord_2 = " << feature_coord_2 << "\n";
+			//cout << "\nfeature_coord_3 = " << feature_coord_3 << "\n";
+
+			// Push the coodinates onto the matrices
+			X_mat.push_back(feature_coord_2);
+			x_mat.push_back(feature_coord_3);
+
+			cout << "\nX_mat:\n" << X_mat << "\n";
+		}
+
+		// Compute the homography estimation
 
 
+		// Project the points through the homography estimate
 
+
+	}
 
 
 
@@ -225,6 +254,7 @@ int main()
 	// BELOW IS THE PORT OF THE HOMOGRAPHY CODE
 	//	-Make the mods to move it in here
 	
+
 	// Send the matches to MATLAB and run the script to compute the homography
 	
 	////// Grab Homography matrix
