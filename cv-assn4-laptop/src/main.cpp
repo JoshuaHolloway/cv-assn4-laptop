@@ -95,6 +95,7 @@ int main()
 	vector<KeyPoint> x;
 	vector<DMatch> matches;
 	vector<DMatch> matches_josh;
+	size_t num_matches{0};
 	for (int i = 0; i != num_features; ++i) // iterate down the rows
 	{
 		// Extract row of the l2-matrix
@@ -153,34 +154,46 @@ int main()
 			// TODO: GRAB THE DISTANCES HERE!
 			int queryIdx = i;		int trainIdx = i;		float distance = 1.0f;
 			matches.push_back(DMatch(queryIdx, trainIdx, distance));
+			num_matches++;
 		}
 	}
 
 	cout << "\nX.size() =  " << X.size() << "\n";
 	cout << "\nx.size() =  " << x.size() << "\n";
 	cout << "\n matches:  " << matches[0].queryIdx << " and " << matches[0].trainIdx << "\n";
-	waitKey(0);
+
 
 	// Toy example of drawing a single match
 	//const vector< KeyPoint > keypoints1({ KeyPoint(100, 100, 1) });
 	//const vector< KeyPoint > keypoints2({ KeyPoint(10, 10, 1) });
 
 
-	// The matches have already been made => Just need to index into them like (0)->(0), (1)<->(1), etc.
-	int queryIdx = 5;
-	int trainIdx = 5;
-	float distance = 1.0f;
-	matches_josh.push_back(DMatch(queryIdx, trainIdx, distance));
-
 	// Draw matches:
 	Mat outImg;
 	Scalar matchColor, singlePointColor;
-	drawMatches(imgs[1], X, imgs[2], x, matches_josh, outImg,
-		matchColor = Scalar::all(-1),
-		singlePointColor = Scalar::all(-1));
-	imshow("matched features", outImg);
+
+	
+
+
+	// Draw the matches
+	for (int i = 0; i < num_matches; ++i)
+	{
+		// The matches have already been made => Just need to index into them like (0)<->(0), (1)<->(1), etc.
+		cout << "i = " << i << "\n";
+		int queryIdx = i;	
+		int trainIdx = i;
+		float distance = 1.0f;
+		matches_josh.push_back(DMatch(i, i, distance));
+		drawMatches(imgs[1], X, imgs[2], x, matches_josh, outImg,
+			matchColor = Scalar::all(-1),
+			singlePointColor = Scalar::all(-1));
+		imshow("matched features", outImg);
+	}
 	waitKey(0);
 
+
+
+	
 	
 
 
