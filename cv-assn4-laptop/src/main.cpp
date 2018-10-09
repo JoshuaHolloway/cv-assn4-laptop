@@ -185,7 +185,7 @@ int main()
 
 	// Use logic like below to ensure each value chosen is unique
 	for (int i = 0; i != 4; ++i)
-	{
+	{ 
 		// Sample value from uniform distribution:
 		rand[i] = distribution(generator);
 
