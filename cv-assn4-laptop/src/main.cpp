@@ -9,7 +9,7 @@
 //#include <opencv2/objdetect.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-//#include <opencv2/features2d.hpp>
+#include <opencv2/features2d.hpp>
 //#include <opencv2/xfeatures2d.hpp>
 //#include <opencv2/xfeatures2d/nonfree.hpp>
 //#include <opencv2/calib3d.hpp>
@@ -24,8 +24,11 @@ using cv::Point;
 using cv::Point2f;
 using cv::Point2i;
 using cv::Scalar;
+using cv::KeyPoint;
+using cv::DMatch;
 using cv::imread;
 using cv::imshow;
+using cv::waitKey;
 //--------
 int main()
 {
@@ -88,6 +91,10 @@ int main()
 
 	// Perform matching with Lowe-Ratio-Test Thresholding
 	Mat index_pairs;
+	vector<KeyPoint> X;
+	vector<KeyPoint> x;
+	vector<DMatch> matches;
+	vector<DMatch> matches_josh;
 	for (int i = 0; i != num_features; ++i) // iterate down the rows
 	{
 		// Extract row of the l2-matrix
@@ -107,35 +114,75 @@ int main()
 		auto lowe_ratio = min_1 / min_2; // Threshold ratio
 
 		// Ratio-test:
-		double lowe_thresh = 0.9;
+		double lowe_thresh = 0.8;
 		if (lowe_ratio < lowe_thresh)
 		{ // If ratio-test is met then we have a match
 			
 			// Store match
-			Point2i match_indices(i, min_idx_1_);
+			auto index_1 = i;
+			auto index_2 = min_idx_1_; // Col-index of l2-mat corresponds to index of feature from image-2 corresponds to current (ith) row
+			Point2i match_indices(index_1, index_2);
 			index_pairs.push_back(match_indices);
 			
 			// Set column to large value to ensure unique matches
 			l2_mat.col(min_idx_1_).setTo(Scalar(1e6));
 
-			// debug:
-			cout << "\nindex_pairs:\n" << index_pairs << "\n\n";
-			getchar();
+			//Point2f coords_match_left( feature_coords_2.row(index_1));
+			//Point2f coords_match_right(feature_coords_3.row(index_2));
+
+			//X.push_back(KeyPoint(coords_match_left, 1.f));
+			//x.push_back(KeyPoint(coords_match_right, 1.f));
+
+			//// TODO: GRAB THE DISTANCES HERE!
+			//int queryIdx = index_1;		int trainIdx = index_2;		float distance = 1.0f;
+			//matches.push_back(DMatch(queryIdx, trainIdx, distance));
+
+			//// debug:
+			//cout << "\nindex_pairs:\n" << index_pairs << "\n\n";
+			//getchar();
+
+			auto X1 = feature_coords_2.at<double>(index_1, 0);
+			auto X2 = feature_coords_2.at<double>(index_1, 1);
+
+			auto x1 = feature_coords_3.at<double>(index_2, 0);
+			auto x2 = feature_coords_3.at<double>(index_2, 1);
+
+			X.push_back(KeyPoint(X1, X2, 1.f));
+			x.push_back(KeyPoint(x1, x2, 1.f));
+
+			// TODO: GRAB THE DISTANCES HERE!
+			int queryIdx = i;		int trainIdx = i;		float distance = 1.0f;
+			matches.push_back(DMatch(queryIdx, trainIdx, distance));
 		}
 	}
 
-	//// We now have the indices of the matches, 
-	////	let's use them to index into the features to get 
-	////	the coordinates of the correspondances X <-> x
-	// AT THIS POINT
-	// AT THIS POINT
-	// AT THIS POINT
-	// AT THIS POINT
+	cout << "\nX.size() =  " << X.size() << "\n";
+	cout << "\nx.size() =  " << x.size() << "\n";
+	cout << "\n matches:  " << matches[0].queryIdx << " and " << matches[0].trainIdx << "\n";
+	waitKey(0);
 
+	// Toy example of drawing a single match
+	//const vector< KeyPoint > keypoints1({ KeyPoint(100, 100, 1) });
+	//const vector< KeyPoint > keypoints2({ KeyPoint(10, 10, 1) });
+
+
+	// The matches have already been made => Just need to index into them like (0)->(0), (1)<->(1), etc.
+	int queryIdx = 5;
+	int trainIdx = 5;
+	float distance = 1.0f;
+	matches_josh.push_back(DMatch(queryIdx, trainIdx, distance));
+
+	// Draw matches:
+	Mat outImg;
+	Scalar matchColor, singlePointColor;
+	drawMatches(imgs[1], X, imgs[2], x, matches_josh, outImg,
+		matchColor = Scalar::all(-1),
+		singlePointColor = Scalar::all(-1));
+	imshow("matched features", outImg);
+	waitKey(0);
 
 	
-	//imshow("test", imgs[0]);
-	//waitKey(0);
+
 
 	return 0;
 }
