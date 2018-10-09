@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <algorithm>
+#include <random>
 //#include <opencv2/opencv.hpp>
 //#include <opencv2/objdetect.hpp>
 #include <opencv2/core/core.hpp>
@@ -37,6 +38,7 @@ int main()
 
 	// Read images
 	vector<Mat> imgs;
+
 	imgs.push_back(imread("keble_a.jpg", CV_LOAD_IMAGE_GRAYSCALE));
 	imgs.push_back(imread("keble_b.jpg", CV_LOAD_IMAGE_GRAYSCALE));
 	imgs.push_back(imread("keble_c.jpg", CV_LOAD_IMAGE_GRAYSCALE));
@@ -91,10 +93,7 @@ int main()
 
 	// Perform matching with Lowe-Ratio-Test Thresholding
 	Mat index_pairs;
-	vector<KeyPoint> X;
-	vector<KeyPoint> x;
-	vector<DMatch> matches;
-	vector<DMatch> matches_josh;
+	vector<KeyPoint> X, x;
 	size_t num_matches{0};
 	for (int i = 0; i != num_features; ++i) // iterate down the rows
 	{
@@ -115,7 +114,7 @@ int main()
 		auto lowe_ratio = min_1 / min_2; // Threshold ratio
 
 		// Ratio-test:
-		double lowe_thresh = 0.8;
+		double lowe_thresh = 0.6;
 		if (lowe_ratio < lowe_thresh)
 		{ // If ratio-test is met then we have a match
 			
@@ -128,20 +127,6 @@ int main()
 			// Set column to large value to ensure unique matches
 			l2_mat.col(min_idx_1_).setTo(Scalar(1e6));
 
-			//Point2f coords_match_left( feature_coords_2.row(index_1));
-			//Point2f coords_match_right(feature_coords_3.row(index_2));
-
-			//X.push_back(KeyPoint(coords_match_left, 1.f));
-			//x.push_back(KeyPoint(coords_match_right, 1.f));
-
-			//// TODO: GRAB THE DISTANCES HERE!
-			//int queryIdx = index_1;		int trainIdx = index_2;		float distance = 1.0f;
-			//matches.push_back(DMatch(queryIdx, trainIdx, distance));
-
-			//// debug:
-			//cout << "\nindex_pairs:\n" << index_pairs << "\n\n";
-			//getchar();
-
 			auto X1 = feature_coords_2.at<double>(index_1, 0);
 			auto X2 = feature_coords_2.at<double>(index_1, 1);
 
@@ -151,31 +136,14 @@ int main()
 			X.push_back(KeyPoint(X1, X2, 1.f));
 			x.push_back(KeyPoint(x1, x2, 1.f));
 
-			// TODO: GRAB THE DISTANCES HERE!
-			int queryIdx = i;		int trainIdx = i;		float distance = 1.0f;
-			matches.push_back(DMatch(queryIdx, trainIdx, distance));
 			num_matches++;
 		}
 	}
 
-	cout << "\nX.size() =  " << X.size() << "\n";
-	cout << "\nx.size() =  " << x.size() << "\n";
-	cout << "\n matches:  " << matches[0].queryIdx << " and " << matches[0].trainIdx << "\n";
-
-
-	// Toy example of drawing a single match
-	//const vector< KeyPoint > keypoints1({ KeyPoint(100, 100, 1) });
-	//const vector< KeyPoint > keypoints2({ KeyPoint(10, 10, 1) });
-
-
-	// Draw matches:
+	// Draw the matches
 	Mat outImg;
 	Scalar matchColor, singlePointColor;
-
-	
-
-
-	// Draw the matches
+	vector<DMatch> matches;
 	for (int i = 0; i < num_matches; ++i)
 	{
 		// The matches have already been made => Just need to index into them like (0)<->(0), (1)<->(1), etc.
@@ -183,8 +151,8 @@ int main()
 		int queryIdx = i;	
 		int trainIdx = i;
 		float distance = 1.0f;
-		matches_josh.push_back(DMatch(i, i, distance));
-		drawMatches(imgs[1], X, imgs[2], x, matches_josh, outImg,
+		matches.push_back(DMatch(i, i, distance));
+		drawMatches(imgs[1], X, imgs[2], x, matches, outImg,
 			matchColor = Scalar::all(-1),
 			singlePointColor = Scalar::all(-1));
 		imshow("matched features", outImg);
@@ -192,9 +160,56 @@ int main()
 	waitKey(0);
 
 
+	// Randomly select four samples
 
+	// Instantiate object of templated normal_distribution class
+	std::random_device seed;
+	std::mt19937 generator(seed());
+	//const float mean = 0.0f;
+	//const float variance = 5.0f;
+	//std::normal_distribution<float> distribution(mean, variance);
+	std::uniform_int_distribution<> distribution(0, num_matches);
+
+	auto debug = distribution(generator);
+	cout << "num_matches = " << num_matches << "\n";
+	cout << "debug = " << debug << "\n";
+
+
+
+
+
+	// DUDE - you have to do the FFT filtering today!!!!!!!!!
+	// DUDE - you have to do the FFT filtering today!!!!!!!!!
+	// DUDE - you have to do the FFT filtering today!!!!!!!!!
+	// DUDE - you have to do the FFT filtering today!!!!!!!!!
+
+
+	// BELOW IS THE PORT OF THE HOMOGRAPHY CODE
+	// BELOW IS THE PORT OF THE HOMOGRAPHY CODE
+	// BELOW IS THE PORT OF THE HOMOGRAPHY CODE
+	// BELOW IS THE PORT OF THE HOMOGRAPHY CODE
+	//	-Make the mods to move it in here
 	
+	// Send the matches to MATLAB and run the script to compute the homography
 	
+	////// Grab Homography matrix
+	////Mat H2 = matlab.return_matrix_as_cvMat_from_matlab("H_to_cpp");
+
+	////// Correpsondences for images 2 <-> 3
+	////auto vects_2 = mat_2_points(X, x);
+
+	/////// Compute re-projection error
+	////// Step 1: Grab the full set of point correspondances
+	////auto N = matlab.return_scalar_from_matlab("num_matches__to_cpp");
+	////Mat X2_full = matlab.return_matrix_as_cvMat_from_matlab("X2_full__to_cpp", (int)N, 2);
+	////Mat x2_full = matlab.return_matrix_as_cvMat_from_matlab("x2_full__to_cpp", (int)N, 2);
+
+	////// Step 2: Pass into re-projection function
+	////float threshold = 4.0f;
+	////auto l2_error = reproj_error(H2, X2_full, x2_full);
+	////vector<Mat> inliers = ransac(H2, X2_full, x2_full, threshold);
+	////cout << "\n\ninliers[0]:\n" << inliers[0];
+	////cout << "\n\ninliers[1]:\n" << inliers[1];
 
 
 	return 0;

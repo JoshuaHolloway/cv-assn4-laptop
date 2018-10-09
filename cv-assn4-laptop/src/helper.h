@@ -17,9 +17,11 @@
 #include <opencv2/core/ocl.hpp>
 using std::vector;
 //using namespace cv;
+using cv::Mat;
+using cv::Point2f;
 //===================================================================
 //Mat est_homog(const Mat& X, const Mat& x)
-Mat est_homog(vector<Point2f> X, vector<Point2f> x)
+cv::Mat est_homog(vector<Point2f> X, vector<Point2f> x)
 {
 	// -X stores the feature coordinates for image-1
 	// -x stores the feature coordinates for image-2
